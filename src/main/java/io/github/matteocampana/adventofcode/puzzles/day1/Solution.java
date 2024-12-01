@@ -1,14 +1,13 @@
-package io.github.matteocampana.adventofcode.puzzles;
+package io.github.matteocampana.adventofcode.puzzles.day1;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class Day1 {
+public class Solution {
 
     public static void main(String[] args) {
         // Read input from file
@@ -19,9 +18,9 @@ public class Day1 {
         int value1;
         int value2;
 
-        Path inputFilePath = Paths.get("/input/day_1.txt");
+        Path inputFilePath = Paths.get("/input/day1/input.txt");
 
-        try (InputStream inputStream = Day1.class.getClassLoader().getResourceAsStream(inputFilePath.toString())) {
+        try (InputStream inputStream = Solution.class.getClassLoader().getResourceAsStream(inputFilePath.toString())) {
             if (inputStream == null)
                 throw new FileNotFoundException("File not found at: " + inputFilePath);
             try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
