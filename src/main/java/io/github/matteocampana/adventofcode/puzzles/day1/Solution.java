@@ -5,9 +5,43 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Solution {
+
+    private static void Part1(List<Integer> input1, List<Integer> input2) {
+        input1.sort(Integer::compareTo);
+        input2.sort(Integer::compareTo);
+
+        // zip the two lists
+
+        assert input1.size() == input2.size();
+        int totalDistance = 0;
+
+        for (int i = 0; i < input1.size(); i++) {
+            totalDistance += Math.abs(input1.get(i) - input2.get(i));
+        }
+        System.out.println("Total distance: " + totalDistance);
+    }
+
+    private static void Part2(List<Integer> input1, List<Integer> input2) {
+        HashMap<Integer, Integer> dict = new HashMap<>();
+
+        for (Integer i : input2) {
+            dict.put(i, dict.getOrDefault(i, 0) + 1);
+        }
+
+        int similarityScore = 0;
+
+        for (Integer i : input1) {
+            if (dict.containsKey(i)) {
+                similarityScore += i * dict.get(i);
+            }
+        }
+
+        System.out.println("Similarity score: " + similarityScore);
+    }
 
     public static void main(String[] args) {
         // Read input from file
@@ -39,18 +73,9 @@ public class Solution {
             e.printStackTrace();
         }
 
-        input1.sort(Integer::compareTo);
-        input2.sort(Integer::compareTo);
+        Part1(input1, input2);
 
-        // zip the two lists
-
-        assert input1.size() == input2.size();
-        int totalDistance = 0;
-
-        for (int i = 0; i < input1.size(); i++) {
-            totalDistance += Math.abs(input1.get(i) - input2.get(i));
-        }
-        System.out.println("Total distance: " + totalDistance);
+        Part2(input1, input2);
 
     }
 }
