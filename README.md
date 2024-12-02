@@ -52,7 +52,7 @@ Welcome to **Advent of Code 2024**! 🎄✨ This repository contains solutions, 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/matteo-campana/advent-of-code-2024.git
+   git clone https://github.com/matteo-campana/advent-of-code.git
    cd advent-of-code-2024
    ```
 
