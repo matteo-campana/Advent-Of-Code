@@ -22,7 +22,7 @@ Welcome to **Advent of Code 2024**! 🎄✨ This repository contains solutions, 
 │   │   ├── Solution.java
 │   │   ├── README.md
 ├── utils/
-│   ├── helpers.java         # Common helper functions used across days
+│   ├── Utils.java         # Common helper functions used across days
 ├── resources/
 │   ├── day1/
 │   │   ├── input.txt
