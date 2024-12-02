@@ -35,6 +35,7 @@ Welcome to **Advent of Code 2024**! 🎄✨ This repository contains solutions, 
 ### Files and Folders
 - **`dayXX/`**: Each folder represents one day of the challenge, containing the input, solution, and an explanation of the approach.
 - **`utils/`**: Shared utilities and helper functions.
+- **`resources/`**: Input files for each day's puzzle.
 - **`LICENSE`**: Licensing information for this repository.
 - **`README.md`**: Overview of the repository (this file).
 
