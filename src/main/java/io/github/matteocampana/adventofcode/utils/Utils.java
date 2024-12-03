@@ -16,6 +16,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Scanner;
 
+@SuppressWarnings("CallToPrintStackTrace")
 public class Utils {
 
     public static void getPuzzleInput(Date inputDate, String sessionCookie) {
@@ -53,11 +54,28 @@ public class Utils {
     }
 
     public static void getPuzzleInput(int day, String sessionCookie) {
-        Path resourcesPath = Paths.get("src/main/resources/input");
+        Path inputPath = Paths.get("src/main/resources/input");
         System.out.println("Getting input for day " + day);
 
-        Path dayPath = resourcesPath.resolve("day" + day);
+
         try {
+            // check if the folders path src/main/resources/input exists otherwise create
+            // the necessary folders
+            if (!Files.exists(inputPath)) {
+                Path resourcesPath = Paths.get("src/main/resources");
+
+                // create the necessary folders
+                if (!Files.exists(resourcesPath))
+                    Files.createDirectory(resourcesPath);
+
+                if (!Files.exists(inputPath))
+                    Files.createDirectory(inputPath);
+
+                Files.createDirectory(resourcesPath);
+            }
+
+            Path dayPath = inputPath.resolve("day" + day);
+
             if (!Files.exists(dayPath)) {
                 Files.createDirectory(dayPath);
             }
@@ -76,6 +94,7 @@ public class Utils {
                 System.out.println("Input for day " + day + " saved to file");
             }
         } catch (IOException | URISyntaxException e) {
+            //noinspection CallToPrintStackTrace
             e.printStackTrace();
         }
     }
@@ -129,6 +148,7 @@ public class Utils {
                         Date inputDate = dateFormat.parse(inputDateString);
                         getPuzzleInput(inputDate, sessionCookie);
                     } catch (Exception e) {
+                        // noinspection CallToPrintStackTrace
                         e.printStackTrace();
                     }
                 } else if (choice.equalsIgnoreCase("day")) {
