@@ -37,7 +37,7 @@ public class Solution {
         for (int i = 0; i < arr.length; i++) {
 
             // if the current character is a 'd' and the next 3 characters are 'do()'
-            if (arr[i] == 'd' &&  i+3 < arr.length && "do()".equals(line.substring(i, i + "do()".length()))) {
+            if (arr[i] == 'd' && i + 3 < arr.length && "do()".equals(line.substring(i, i + "do()".length()))) {
                 if (bDisable) {
                     bDisable = false;
                     start = i + "do()".length();
@@ -45,7 +45,7 @@ public class Solution {
             }
 
             // if the current character is a 'd' and the next 6 characters are 'don't()'
-            if (arr[i] == 'd' && i+6 < arr.length && "don't()".equals(line.substring(i, i + "don't()".length()))) {
+            if (arr[i] == 'd' && i + 6 < arr.length && "don't()".equals(line.substring(i, i + "don't()".length()))) {
                 if (!bDisable) {
                     // extract all valid multiplications from the block
                     String block = line.substring(start, i);
@@ -97,16 +97,12 @@ public class Solution {
             e.printStackTrace();
         }
 
-        validMultiplications = extractValidMultiplicationsPart1(content.toString());
-        validMultiplications = extractValidMultiplicationsPart2(content.toString());
-
         if (multiplicationSumPart2 > multiplicationSumPart1) {
             throw new RuntimeException("Multiplication sum for part 2 is greater than part 1");
         }
         System.out.println("Solution line by line:");
         System.out.println("[PART 1] The sum of all valid multiplications is: " + multiplicationSumPart1);
         System.out.println("[PART 2] The sum of all valid multiplications is: " + multiplicationSumPart2);
-
 
         validMultiplications = extractValidMultiplicationsPart1(content.toString());
         multiplicationSumPart1 = validMultiplications.stream().map(Solution::calculateMultiplication)
@@ -115,7 +111,6 @@ public class Solution {
         multiplicationSumPart2 = validMultiplications.stream().map(Solution::calculateMultiplication)
                 .reduce(0, Integer::sum);
 
-        
         System.out.println("#".repeat(150));
 
         if (multiplicationSumPart2 > multiplicationSumPart1) {
