@@ -41,3 +41,4 @@ build/
 
 !/src/main/resources/input/*
 src/main/resources/input/*
+.env

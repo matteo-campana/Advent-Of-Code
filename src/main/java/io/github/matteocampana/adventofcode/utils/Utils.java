@@ -16,6 +16,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Scanner;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 @SuppressWarnings("CallToPrintStackTrace")
 public class Utils {
 
@@ -57,7 +59,6 @@ public class Utils {
         Path inputPath = Paths.get("src/main/resources/input");
         System.out.println("Getting input for day " + day);
 
-
         try {
             // check if the folders path src/main/resources/input exists otherwise create
             // the necessary folders
@@ -94,7 +95,7 @@ public class Utils {
                 System.out.println("Input for day " + day + " saved to file");
             }
         } catch (IOException | URISyntaxException e) {
-            //noinspection CallToPrintStackTrace
+            // noinspection CallToPrintStackTrace
             e.printStackTrace();
         }
     }
@@ -121,10 +122,14 @@ public class Utils {
     }
 
     public static void main(String[] args) {
-
+        Dotenv dotenv = Dotenv.load();
         try (Scanner scanner = new Scanner(System.in)) {
-            do {
-                System.out.println("Welcome to the Advent of Code 2024 puzzle input downloader!");
+
+            System.out.println("Welcome to the Advent of Code 2024 puzzle input downloader!");
+
+            String sessionCookie = dotenv.get("SESSION_COOKIE");
+            if (sessionCookie == null || sessionCookie.isEmpty()) {
+                System.out.println("Session cookie not found in .env file.");
                 System.out.println("To get the input for a specific day, you need to provide your session cookie.\n");
 
                 System.out.println("To get your session cookie, follow these steps:");
@@ -132,10 +137,11 @@ public class Utils {
                 System.out.println("2. Log in with your account");
                 System.out.println("3. Open the developer tools (F12) and go to the 'Application' tab");
                 System.out.println("4. Find the 'session' cookie in the 'Cookies' section and copy its value");
-
                 System.out.print("Enter your session cookie: ");
-                String sessionCookie = scanner.nextLine();
+                sessionCookie = scanner.nextLine();
+            }
 
+            do {
                 System.out.print("Do you want to enter a date, a day number, or download all inputs? (date/day/all): ");
                 String choice = scanner.nextLine();
 
@@ -167,6 +173,5 @@ public class Utils {
                 }
             } while (true);
         }
-
     }
 }
