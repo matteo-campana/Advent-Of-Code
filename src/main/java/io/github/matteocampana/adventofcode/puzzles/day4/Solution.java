@@ -8,7 +8,14 @@ import java.nio.file.Paths;
 public class Solution {
 
     public static void main(String[] args) {
-        // solutionPart1();
+        System.out.println("Day 4");
+
+        System.out.println("Part 1");
+        solutionPart1();
+
+        System.out.println("\n\n" + "#".repeat(100) + "\n\n");
+
+        System.out.println("Part 2");
         solutionPart2();
     }
 
