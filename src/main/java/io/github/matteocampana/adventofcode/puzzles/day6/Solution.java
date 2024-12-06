@@ -105,7 +105,6 @@ public class Solution {
         }
 
         private void rotate() {
-
             direction = switch (direction) {
                 case '>' -> 'v';
                 case 'v' -> '<';
@@ -113,7 +112,6 @@ public class Solution {
                 case '^' -> '>';
                 default -> direction;
             };
-
         }
 
         public void updateMapPart1() {
@@ -175,7 +173,6 @@ public class Solution {
 
                 }
             }
-
             return obstacles;
         }
 
@@ -224,8 +221,6 @@ public class Solution {
             }
             return true;
         }
-
-
 
         private int countVisitedCells() {
             int count = 0;
