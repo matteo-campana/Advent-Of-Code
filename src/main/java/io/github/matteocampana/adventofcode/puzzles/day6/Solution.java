@@ -1,297 +1,231 @@
 package io.github.matteocampana.adventofcode.puzzles.day6;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Solution {
 
-    private static void printLabMap(char[][] labMap) {
-        for (char[] line : labMap) {
-            System.out.println(Arrays.toString(line).replace(", ", " ").replace("[", "").replace("]", ""));
+    public static final int DIR_NORTH = 0;
+    public static final int DIR_EAST = 1;
+    public static final int DIR_SOUTH = 2;
+    public static final int DIR_WEST = 3;
+
+    public static final char[] DIR_CHARS = { '^', '>', 'v', '<' };
+    public static final Pos[] DIR_VECTORS = { new Pos(0, -1), new Pos(1, 0), new Pos(0, 1), new Pos(-1, 0) };
+
+    public static int turnRight(int dir) {
+        return (dir + 1) % 4;
+    }
+
+    public static int uTurn(int dir) {
+        return (dir + 2) % 4;
+    }
+
+    public static int turnLeft(int dir) {
+        return (dir + 3) % 4;
+    }
+
+    record Pos(int x, int y) {
+        @Override
+        public String toString() {
+            return "(" + x + "," + y + ")";
+        }
+
+        public Pos add(Pos other) {
+            return add(other.x, other.y);
+        }
+
+        public Pos add(int dx, int dy) {
+            return new Pos(x + dx, y + dy);
+        }
+
+        public Pos move(int dir) {
+            return add(DIR_VECTORS[dir]);
         }
     }
 
-    public static void main(String[] args) {
-        Path inputFilePath = Paths.get("input/day6/test.txt");
+    public static class Lab {
+        private List<String> rows;
+        int maxX;
+        int maxY;
 
-        List<char[]> labMapList = new ArrayList<>();
+        public Pos guardPos;
+        public int guardDir;
 
-        try (InputStream inputStream = Solution.class.getClassLoader().getResourceAsStream(inputFilePath.toString())) {
-            if (inputStream == null)
-                throw new FileNotFoundException("File not found at: " + inputFilePath);
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    labMapList.add(line.trim().toCharArray());
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        public int ticks;
+
+        public Map<Pos, Character> visitedPositions;
+
+        public Lab() {
+            rows = new ArrayList<>();
+            maxX = 0;
+            maxY = 0;
+            guardPos = null;
+            guardDir = -1;
+            visitedPositions = null;
+            ticks = 0;
         }
 
-        char[][] labMap = labMapList.toArray(new char[0][]);
-        printLabMap(labMap);
-
-        Guard guard1 = new Guard(labMap);
-
-        System.out.println("#".repeat(50));
-        System.out.println("Part 1");
-        System.out.println("-".repeat(50));
-        guard1.updateMapPart1();
-
-        printLabMap(guard1.labMap);
-
-        System.out.println(guard1.countVisitedCells());
-
-        System.out.println("#".repeat(50));
-        System.out.println("Part 2");
-        System.out.println("-".repeat(50));
-
-        Guard guard2 = new Guard(labMap);
-
-        guard2.updateMapPart2();
-
-        printLabMap(guard2.labMap);
-
-        System.out.println(guard2.visitedCells.size());
-
-        System.out.println("Obstacles: " +
-                guard2.getPossibleObstacles().size());
-
-    }
-
-    private static class Guard {
-        int posY, posX;
-        boolean outOfMap;
-        char[][] labMap;
-        char direction;
-        Map<List<Integer>, Set<Character>> visitedCells = new HashMap<>();
-
-        public Guard(
-                char[][] labMap) {
-            this.labMap = new char[labMap.length][labMap[0].length];
-            for (int i = 0; i < labMap.length; i++) {
-                System.arraycopy(labMap[i], 0, this.labMap[i], 0, labMap[i].length);
-            }
-            findGuard();
-            outOfMap = false;
+        public Lab(Lab other) {
+            this.rows = new ArrayList<>(other.rows);
+            this.maxX = other.maxX;
+            this.maxY = other.maxY;
+            this.guardPos = other.guardPos;
+            this.guardDir = other.guardDir;
+            this.visitedPositions = new HashMap<>(other.visitedPositions);
+            this.ticks = other.ticks;
         }
 
-        private void findGuard() {
-            for (int i = 0; i < labMap.length; i++) {
-                for (int j = 0; j < labMap[i].length; j++) {
-                    if ("<>v^".indexOf(labMap[i][j]) != -1) {
-                        posY = i;
-                        posX = j;
-                        direction = labMap[i][j];
+        public void addRow(String row) {
+            rows.add(row);
+            maxX = row.length();
+            maxY = rows.size();
+        }
+
+        public char get(Pos pos) {
+            return get(pos.x, pos.y);
+        }
+
+        public char get(int x, int y) {
+            if ((x < 0) || (x >= maxX) || (y < 0) || (y >= maxY)) {
+                return '+';
+            }
+            return rows.get(y).charAt(x);
+        }
+
+        public boolean isFree(int x, int y) {
+            return get(x, y) == '.';
+        }
+
+        public boolean isBlocked(Pos pos) {
+            return get(pos) == '#';
+        }
+
+        public boolean isOutside(Pos pos) {
+            return get(pos) == '+';
+        }
+
+        public boolean isLoop() {
+            Character c = visitedPositions.get(guardPos);
+            return (c != null) && (c == DIR_CHARS[guardDir]);
+        }
+
+        public void findGuardPos() {
+            for (int y = 0; y < maxY; y++) {
+                for (int x = 0; x < maxX; x++) {
+                    if (get(x, y) == '^') {
+                        guardPos = new Pos(x, y);
+                        guardDir = DIR_NORTH;
+                        visitedPositions = new HashMap<>();
+                        visitedPositions.put(guardPos, '^');
                         return;
                     }
                 }
             }
+            throw new RuntimeException("start pos not found");
         }
 
-        private boolean isOutOfMap(int x, int y) {
-            return y >= labMap.length || x >= labMap[0].length || y < 0
-                    || x < 0;
-        }
-
-        private void rotate() {
-            direction = switch (direction) {
-                case '>' -> 'v';
-                case 'v' -> '<';
-                case '<' -> '^';
-                case '^' -> '>';
-                default -> direction;
-            };
-        }
-
-        public void updateMapPart1() {
-            while (!outOfMap) {
-                int[] nextPosition = nextPos();
-                if (isOutOfMap(nextPosition[1], nextPosition[0])) {
-                    outOfMap = true;
-                    labMap[posY][posX] = 'X';
-                } else {
-                    labMap[posY][posX] = 'X';
-                    posY = nextPosition[0];
-                    posX = nextPosition[1];
-                }
+        public boolean tick() {
+            ticks++;
+            Pos nextPos = guardPos.move(guardDir);
+            while (isBlocked(nextPos)) {
+                guardDir = turnRight(guardDir);
+                nextPos = guardPos.move(guardDir);
             }
-        }
-
-        public List<List<Integer>> getPossibleObstacles() {
-
-            List<List<Integer>> obstacles = new ArrayList<>();
-
-            for (List<Integer> cell : visitedCells.keySet()) {
-                int x = cell.get(1);
-                int y = cell.get(0);
-                Set<Character> directions = visitedCells.get(cell);
-
-                // check if placing a wall in the cell in front of the guard cause a loop
-
-                for (char direction : directions) {
-                    switch (direction) {
-                        case 'v' -> {
-                            // next cell is is (y+1,x) then rotating the next cell will be (y, x-1)
-                            if (visitedCells.containsKey(List.of(y, x - 1))
-                                    && visitedCells.get(List.of(y, x - 1)).contains('<')) {
-                                obstacles.add(List.of(y + 1, x));
-                            }
-                        }
-                        case '^' -> {
-                            // next cell is is (y-1,x) then rotating the next cell will be (y, x+1)
-                            if (visitedCells.containsKey(List.of(y, x + 1))
-                                    && visitedCells.get(List.of(y, x + 1)).contains('>')) {
-                                obstacles.add(List.of(y - 1, x));
-                            }
-                        }
-                        case '>' -> {
-                            // next cell is is (y,x+1) then rotating the next cell will be (y+1, x)
-                            if (visitedCells.containsKey(List.of(y + 1, x))
-                                    && visitedCells.get(List.of(y + 1, x)).contains('v')) {
-                                obstacles.add(List.of(y, x + 1));
-                            }
-                        }
-                        case '<' -> {
-                            // next cell is is (y,x-1) then rotating the next cell will be (y-1, x)
-                            if (visitedCells.containsKey(List.of(y - 1, x))
-                                    && visitedCells.get(List.of(y - 1, x)).contains('^')) {
-                                obstacles.add(List.of(y, x - 1));
-                            }
-                        }
-                    }
-
-                }
+            guardPos = nextPos;
+            if (isLoop()) {
+                return false;
             }
-            return obstacles;
-        }
-
-        public boolean updateMapPart2() {
-            while (!outOfMap) {
-
-                char marker;
-                char prevDirection = direction;
-
-                int[] nextPosition = nextPos();
-
-                if (prevDirection == direction) {
-                    if (prevDirection == '^' || prevDirection == 'v') {
-                        marker = '|';
-                    } else {
-                        marker = '-';
-                    }
-                } else {
-                    marker = '+';
-                }
-
-                if (marker == '|' && labMap[posY][posX] == '-' || marker == '-' &&
-                        labMap[posY][posX] == '|') {
-                    marker = '+';
-                }
-
-                labMap[posY][posX] = marker;
-
-                if (visitedCells.containsKey(List.of(posY, posX))) {
-                    if (visitedCells.get(List.of(posY, posX)).contains(direction)) {
-                        System.out.println("Loop detected");
-                        return true;
-                    } else {
-                        visitedCells.get(List.of(posY, posX)).add(direction);
-                    }
-                } else {
-                    visitedCells.put(List.of(posY, posX), new HashSet<>(direction));
-                }
-
-                if (isOutOfMap(nextPosition[1], nextPosition[0])) {
-                    outOfMap = true;
-                } else {
-                    posY = nextPosition[0];
-                    posX = nextPosition[1];
-                }
+            if (isOutside(guardPos)) {
+                return false;
             }
+            visitedPositions.put(guardPos, DIR_CHARS[guardDir]);
             return true;
         }
 
-        private int countVisitedCells() {
-            int count = 0;
-            for (char[] line : labMap) {
-                for (char cell : line) {
-                    if (cell == 'X') {
-                        count++;
+        @Override
+        public String toString() {
+            StringBuilder result = new StringBuilder();
+            result.append("SHAPE (" + maxX + "," + maxY + "), TICKS " + ticks + ", POS " + guardPos + ", DIR "
+                    + DIR_CHARS[guardDir] + "\n");
+            for (int y = 0; y < maxY; y++) {
+                for (int x = 0; x < maxX; x++) {
+                    Pos p = new Pos(x, y);
+                    char c = get(p);
+                    if (visitedPositions.containsKey(p)) {
+                        c = visitedPositions.get(p);
+                    }
+                    result.append(c);
+                }
+                result.append('\n');
+            }
+            return result.toString();
+        }
+
+        public void set(int x, int y, char c) {
+            String row = rows.get(y);
+            String newRow = row.substring(0, x) + c + row.substring(x + 1);
+            rows.set(y, newRow);
+        }
+    }
+
+    public static void mainPart1(String inputfile) throws FileNotFoundException {
+        Lab lab = new Lab();
+        try (Scanner scanner = new Scanner(new File(inputfile))) {
+            while (scanner.hasNext()) {
+                String line = scanner.nextLine().trim();
+                if (line.isBlank()) {
+                    continue;
+                }
+                lab.addRow(line);
+            }
+        }
+        lab.findGuardPos();
+        while (lab.tick()) {
+            // System.out.println(lab);
+        }
+        System.out.println(lab);
+        System.out.println(lab.visitedPositions.size());
+    }
+
+    public static void mainPart2(String inputfile) throws FileNotFoundException {
+        Lab lab = new Lab();
+        try (Scanner scanner = new Scanner(new File(inputfile))) {
+            while (scanner.hasNext()) {
+                String line = scanner.nextLine().trim();
+                if (line.isBlank()) {
+                    continue;
+                }
+                lab.addRow(line);
+            }
+        }
+        lab.findGuardPos();
+        int countLoops = 0;
+        for (int y = 0; y < lab.maxY; y++) {
+            for (int x = 0; x < lab.maxX; x++) {
+                if (lab.isFree(x, y)) {
+                    Lab testLab = new Lab(lab);
+                    // System.out.println("BEFORE " + new Pos(x, y) + ": " + testLab);
+                    testLab.set(x, y, '#');
+                    // System.out.println("AFTER " + new Pos(x, y) + ": " + testLab);
+                    while (testLab.tick()) {
+                    }
+                    if (testLab.isLoop()) {
+                        countLoops++;
                     }
                 }
             }
-            return count;
         }
+        System.out.println("LOOPS: " + countLoops);
+    }
 
-        private int[] nextPos() {
-
-            int[] nextPosition = new int[2];
-            switch (direction) {
-                case 'v' -> {
-                    if (posY + 1 >= labMap.length) {
-                        outOfMap = true;
-                        return new int[] { posY + 1, posX };
-                    }
-                    if (labMap[posY + 1][posX] == '#' || labMap[posY + 1][posX] == 'O') {
-                        rotate();
-                        return nextPos();
-                    } else {
-                        nextPosition[0] = posY + 1;
-                        nextPosition[1] = posX;
-                    }
-                }
-                case '^' -> {
-                    if (posY - 1 < 0) {
-                        outOfMap = true;
-                        return new int[] { posY - 1, posX };
-                    }
-                    if (labMap[posY - 1][posX] == '#' || labMap[posY - 1][posX] == 'O') {
-                        rotate();
-                        return nextPos();
-                    } else {
-                        nextPosition[0] = posY - 1;
-                        nextPosition[1] = posX;
-                    }
-                }
-                case '>' -> {
-                    if (posX + 1 >= labMap[0].length) {
-                        outOfMap = true;
-                        return new int[] { posY, posX + 1 };
-                    }
-                    if (labMap[posY][posX + 1] == '#' || labMap[posY][posX + 1] == 'O') {
-                        rotate();
-                        return nextPos();
-                    } else {
-                        nextPosition[0] = posY;
-                        nextPosition[1] = posX + 1;
-                    }
-                }
-                case '<' -> {
-                    if (posX - 1 < 0) {
-                        outOfMap = true;
-                        return new int[] { posY, posX - 1 };
-                    }
-                    if (labMap[posY][posX - 1] == '#' || labMap[posY][posX - 1] == 'O') {
-                        rotate();
-                        return nextPos();
-                    } else {
-                        nextPosition[0] = posY;
-                        nextPosition[1] = posX - 1;
-                    }
-                }
-            }
-            return nextPosition;
-        }
+    public static void main(String[] args) throws FileNotFoundException {
+        System.out.println("--- PART I  ---");
+        mainPart1("src\\main\\resources\\input\\day6\\input.txt");
+        System.out.println("---------------");
+        System.out.println();
+        System.out.println("--- PART II ---");
+        mainPart2("src\\main\\resources\\input\\day6\\input.txt");
+        System.out.println("---------------");
     }
 }
