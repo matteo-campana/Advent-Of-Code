@@ -6,13 +6,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class Solution {
 
     private static void printLabMap(char[][] labMap) {
         for (char[] line : labMap) {
-            System.out.println(Arrays.toString(line));
+            System.out.println(Arrays.toString(line).replace(", ", " ").replace("[", "").replace("]", ""));
         }
     }
 
@@ -57,6 +61,12 @@ public class Solution {
         guard2.updateMapPart2();
 
         printLabMap(guard2.labMap);
+
+        System.out.println(guard2.visitedCells.size());
+
+        System.out.println("Obstacles: " +
+                guard2.getPossibleObstacles().size());
+
     }
 
     private static class Guard {
@@ -64,8 +74,10 @@ public class Solution {
         boolean outOfMap;
         char[][] labMap;
         char direction;
+        Map<List<Integer>, Set<Character>> visitedCells = new HashMap<>();
 
-        public Guard(char[][] labMap) {
+        public Guard(
+                char[][] labMap) {
             this.labMap = new char[labMap.length][labMap[0].length];
             for (int i = 0; i < labMap.length; i++) {
                 System.arraycopy(labMap[i], 0, this.labMap[i], 0, labMap[i].length);
@@ -81,7 +93,6 @@ public class Solution {
                         posY = i;
                         posX = j;
                         direction = labMap[i][j];
-
                         return;
                     }
                 }
@@ -94,6 +105,7 @@ public class Solution {
         }
 
         private void rotate() {
+
             direction = switch (direction) {
                 case '>' -> 'v';
                 case 'v' -> '<';
@@ -101,6 +113,7 @@ public class Solution {
                 case '^' -> '>';
                 default -> direction;
             };
+
         }
 
         public void updateMapPart1() {
@@ -117,7 +130,56 @@ public class Solution {
             }
         }
 
-        public void updateMapPart2() {
+        public List<List<Integer>> getPossibleObstacles() {
+
+            List<List<Integer>> obstacles = new ArrayList<>();
+
+            for (List<Integer> cell : visitedCells.keySet()) {
+                int x = cell.get(1);
+                int y = cell.get(0);
+                Set<Character> directions = visitedCells.get(cell);
+
+                // check if placing a wall in the cell in front of the guard cause a loop
+
+                for (char direction : directions) {
+                    switch (direction) {
+                        case 'v' -> {
+                            // next cell is is (y+1,x) then rotating the next cell will be (y, x-1)
+                            if (visitedCells.containsKey(List.of(y, x - 1))
+                                    && visitedCells.get(List.of(y, x - 1)).contains('<')) {
+                                obstacles.add(List.of(y + 1, x));
+                            }
+                        }
+                        case '^' -> {
+                            // next cell is is (y-1,x) then rotating the next cell will be (y, x+1)
+                            if (visitedCells.containsKey(List.of(y, x + 1))
+                                    && visitedCells.get(List.of(y, x + 1)).contains('>')) {
+                                obstacles.add(List.of(y - 1, x));
+                            }
+                        }
+                        case '>' -> {
+                            // next cell is is (y,x+1) then rotating the next cell will be (y+1, x)
+                            if (visitedCells.containsKey(List.of(y + 1, x))
+                                    && visitedCells.get(List.of(y + 1, x)).contains('v')) {
+                                obstacles.add(List.of(y, x + 1));
+                            }
+                        }
+                        case '<' -> {
+                            // next cell is is (y,x-1) then rotating the next cell will be (y-1, x)
+                            if (visitedCells.containsKey(List.of(y - 1, x))
+                                    && visitedCells.get(List.of(y - 1, x)).contains('^')) {
+                                obstacles.add(List.of(y, x - 1));
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            return obstacles;
+        }
+
+        public boolean updateMapPart2() {
             while (!outOfMap) {
 
                 char marker;
@@ -140,17 +202,30 @@ public class Solution {
                     marker = '+';
                 }
 
+                labMap[posY][posX] = marker;
+
+                if (visitedCells.containsKey(List.of(posY, posX))) {
+                    if (visitedCells.get(List.of(posY, posX)).contains(direction)) {
+                        System.out.println("Loop detected");
+                        return true;
+                    } else {
+                        visitedCells.get(List.of(posY, posX)).add(direction);
+                    }
+                } else {
+                    visitedCells.put(List.of(posY, posX), new HashSet<>(direction));
+                }
+
                 if (isOutOfMap(nextPosition[1], nextPosition[0])) {
                     outOfMap = true;
-                    labMap[posY][posX] = marker;
                 } else {
-                    labMap[posY][posX] = marker;
                     posY = nextPosition[0];
                     posX = nextPosition[1];
-
                 }
             }
+            return true;
         }
+
+
 
         private int countVisitedCells() {
             int count = 0;
@@ -173,7 +248,7 @@ public class Solution {
                         outOfMap = true;
                         return new int[] { posY + 1, posX };
                     }
-                    if (labMap[posY + 1][posX] == '#') {
+                    if (labMap[posY + 1][posX] == '#' || labMap[posY + 1][posX] == 'O') {
                         rotate();
                         return nextPos();
                     } else {
@@ -186,7 +261,7 @@ public class Solution {
                         outOfMap = true;
                         return new int[] { posY - 1, posX };
                     }
-                    if (labMap[posY - 1][posX] == '#') {
+                    if (labMap[posY - 1][posX] == '#' || labMap[posY - 1][posX] == 'O') {
                         rotate();
                         return nextPos();
                     } else {
@@ -199,7 +274,7 @@ public class Solution {
                         outOfMap = true;
                         return new int[] { posY, posX + 1 };
                     }
-                    if (labMap[posY][posX + 1] == '#') {
+                    if (labMap[posY][posX + 1] == '#' || labMap[posY][posX + 1] == 'O') {
                         rotate();
                         return nextPos();
                     } else {
@@ -212,7 +287,7 @@ public class Solution {
                         outOfMap = true;
                         return new int[] { posY, posX - 1 };
                     }
-                    if (labMap[posY][posX - 1] == '#') {
+                    if (labMap[posY][posX - 1] == '#' || labMap[posY][posX - 1] == 'O') {
                         rotate();
                         return nextPos();
                     } else {
