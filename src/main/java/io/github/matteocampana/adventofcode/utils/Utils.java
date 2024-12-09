@@ -166,11 +166,13 @@ public class Utils {
                 } else {
                     System.out.println("Invalid choice. Please enter 'date', 'day', or 'all'.");
                 }
-                System.out.println("Do you want to download another input? (yes/no)");
+                System.out.println("\nDo you want to download another input? (yes/no)");
+
                 choice = scanner.nextLine();
                 if (choice.equalsIgnoreCase("no")) {
                     break;
                 }
+                System.out.print("\n\n" + "#".repeat(100));
             } while (true);
         }
     }
