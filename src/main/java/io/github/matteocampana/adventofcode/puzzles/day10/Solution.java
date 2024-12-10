@@ -34,13 +34,13 @@ public class Solution {
 
         for (int row = 0; row < input.size(); row++) {
             for (int col = 0; col < input.get(row).length(); col++) { // Fix the loop condition
-                countValidTrailsheads += countValidTrailheads(input, row, col,false);
-                countPossibleTrailheadsPaths += countValidTrailheads(input, row, col,true);
+                countValidTrailsheads += countValidTrailheads(input, row, col, false);
+                countPossibleTrailheadsPaths += countValidTrailheads(input, row, col, true);
             }
         }
 
         System.out.println("\n\n[PART 1] Valid Trailheads: " + countValidTrailsheads);
-        System.out.println("[PART 2] Possible Valid Trailheads Paths: " + countValidTrailsheads);
+        System.out.println("[PART 2] Possible Valid Trailheads Paths: " + countPossibleTrailheadsPaths);
 
     }
 
