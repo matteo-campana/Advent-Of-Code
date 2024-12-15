@@ -34,7 +34,7 @@ public class Utils {
         Path dayPath = resourcesPath.resolve("day" + day);
         try {
             if (!Files.exists(dayPath)) {
-                Files.createDirectory(dayPath);
+                Files.createDirectories(dayPath);
             }
 
             URL url = new URI("https://adventofcode.com/2024/day/" + day + "/input").toURL();
@@ -60,25 +60,14 @@ public class Utils {
         System.out.println("Getting input for day " + day);
 
         try {
-            // check if the folders path src/main/resources/input exists otherwise create
-            // the necessary folders
             if (!Files.exists(inputPath)) {
-                Path resourcesPath = Paths.get("src/main/resources");
-
-                // create the necessary folders
-                if (!Files.exists(resourcesPath))
-                    Files.createDirectory(resourcesPath);
-
-                if (!Files.exists(inputPath))
-                    Files.createDirectory(inputPath);
-
-                Files.createDirectory(resourcesPath);
+                Files.createDirectories(inputPath);
             }
 
             Path dayPath = inputPath.resolve("day" + day);
 
             if (!Files.exists(dayPath)) {
-                Files.createDirectory(dayPath);
+                Files.createDirectories(dayPath);
             }
 
             URL url = new URI("https://adventofcode.com/2024/day/" + day + "/input").toURL();
@@ -95,15 +84,11 @@ public class Utils {
                 System.out.println("Input for day " + day + " saved to file");
             }
         } catch (IOException | URISyntaxException e) {
-            // noinspection CallToPrintStackTrace
             e.printStackTrace();
         }
     }
 
     public static void getAllPuzzleInputs(String sessionCookie) {
-
-        // get the current date and set the maximum day
-
         Calendar calendar = Calendar.getInstance();
         int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
         int currentMonth = calendar.get(Calendar.MONTH);
@@ -141,7 +126,7 @@ public class Utils {
                 sessionCookie = scanner.nextLine();
             }
 
-            do {
+            while (true) {
                 System.out.print("Do you want to enter a date, a day number, or download all inputs? (date/day/all): ");
                 String choice = scanner.nextLine();
 
@@ -154,12 +139,11 @@ public class Utils {
                         Date inputDate = dateFormat.parse(inputDateString);
                         getPuzzleInput(inputDate, sessionCookie);
                     } catch (Exception e) {
-                        // noinspection CallToPrintStackTrace
                         e.printStackTrace();
                     }
                 } else if (choice.equalsIgnoreCase("day")) {
                     System.out.print("Enter the day number for which you want to get the input (e.g., 1): ");
-                    int day = scanner.nextInt();
+                    int day = Integer.parseInt(scanner.nextLine());
                     getPuzzleInput(day, sessionCookie);
                 } else if (choice.equalsIgnoreCase("all")) {
                     getAllPuzzleInputs(sessionCookie);
@@ -172,8 +156,8 @@ public class Utils {
                 if (choice.equalsIgnoreCase("no")) {
                     break;
                 }
-                System.out.print("\n\n" + "#".repeat(100));
-            } while (true);
+                System.out.println("\n\n" + "#".repeat(100));
+            }
         }
     }
 }
