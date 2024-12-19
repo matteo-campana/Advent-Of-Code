@@ -1,16 +1,18 @@
 package io.github.matteocampana.adventofcode.puzzles.day13;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Solution {
 
     public static void main(String[] args) {
-        Path inputFilePath = Paths.get("input/day13/test.txt");
+        Path inputFilePath = Paths.get("input/day13/input.txt");
         List<String> input = new ArrayList<>();
 
         try (InputStream inputStream = Solution.class.getClassLoader().getResourceAsStream(inputFilePath.toString())) {
@@ -33,39 +35,42 @@ public class Solution {
 
         for (long i = 0; i < input.size(); i += 4) {
             String[] buttonA = input.get((int) i).split(", ");
-            long ax = Integer.parseInt(buttonA[0].split("\\+")[1].trim());
-            long ay = Integer.parseInt(buttonA[1].split("\\+")[1].trim());
+            BigDecimal ax = new BigDecimal(buttonA[0].split("\\+")[1].trim());
+            BigDecimal ay = new BigDecimal(buttonA[1].split("\\+")[1].trim());
 
             // Parse Button B
             String[] buttonB = input.get((int) i + 1).split(", ");
-            long bx = Integer.parseInt(buttonB[0].split("\\+")[1].trim());
-            long by = Integer.parseInt(buttonB[1].split("\\+")[1].trim());
+            BigDecimal bx = new BigDecimal(buttonB[0].split("\\+")[1].trim());
+            BigDecimal by = new BigDecimal(buttonB[1].split("\\+")[1].trim());
 
             // Parse Prize
             String[] prize = input.get((int) i + 2).split(", ");
-            long px = Integer.parseInt(prize[0].split("=")[1].trim());
-            long py = Integer.parseInt(prize[1].split("=")[1].trim());
+            BigDecimal px = new BigDecimal(prize[0].split("=")[1].trim());
+            BigDecimal py = new BigDecimal(prize[1].split("=")[1].trim());
 
             // Add the machine to the list
             machines.add(new ClawMachine(ax, ay, bx, by, px, py));
         }
         System.out.println("[PART 1] min token to win: " + minTokensToWin(machines));
 
-        System.out.println("[PART 1] min token to win test: " + minTokensToWinTest(machines));
+        System.out.println("[PART 1] min token to win test: " + minTokensToWin2(machines));
 
-        // List<ClawMachine> machines2 = new ArrayList<>(machines);
-        // for (ClawMachine machine : machines2) {
-        // machine.px += 10000000000000L;
-        // machine.py += 10000000000000L;
-        // }
+        List<ClawMachine> machines2 = new ArrayList<>(machines);
+
+        for (ClawMachine machine : machines2) {
+            machine.px = machine.px.add(new BigDecimal(10000000000000L));
+            machine.py = machine.py.add(new BigDecimal(10000000000000L));
+        }
+
+        System.out.println("[PART 2] min token to win: " + minTokensToWinPart2(machines2));
 
     }
 
     static class ClawMachine {
-        long ax, ay, bx, by; // Button A and B movements
-        long px, py; // Prize location
+        BigDecimal ax, ay, bx, by; // Button A and B movements
+        BigDecimal px, py; // Prize location
 
-        ClawMachine(long ax, long ay, long bx, long by, long px, long py) {
+        ClawMachine(BigDecimal ax, BigDecimal ay, BigDecimal bx, BigDecimal by, BigDecimal px, BigDecimal py) {
             this.ax = ax;
             this.ay = ay;
             this.bx = bx;
@@ -87,51 +92,88 @@ public class Solution {
         }
     }
 
-    private static long minTokensToWin(List<ClawMachine> machines) {
-        long totalTokens = 0;
+    private static BigDecimal minTokensToWin(List<ClawMachine> machines) {
+        BigDecimal totalTokens = BigDecimal.ZERO;
 
         for (ClawMachine machine : machines) {
-            long minTokens = Integer.MAX_VALUE;
+            BigDecimal minTokens = BigDecimal.valueOf(Long.MAX_VALUE);
             boolean canWin = false;
 
             // Iterate over all possible combinations of A and B presses (0 to 100)
-            for (long a = 0; a <= 100; a++) {
-                for (long b = 0; b <= 100; b++) {
-                    long x = a * machine.ax + b * machine.bx;
-                    long y = a * machine.ay + b * machine.by;
+            for (int a = 0; a <= 100; a++) {
+                for (int b = 0; b <= 100; b++) {
+                    BigDecimal x = machine.ax.multiply(BigDecimal.valueOf(a))
+                            .add(machine.bx.multiply(BigDecimal.valueOf(b)));
+                    BigDecimal y = machine.ay.multiply(BigDecimal.valueOf(a))
+                            .add(machine.by.multiply(BigDecimal.valueOf(b)));
 
                     // Check if the claw aligns with the prize
-                    if (x == machine.px && y == machine.py) {
+                    if (Objects.equals(x, machine.px) && Objects.equals(y, machine.py)) {
                         canWin = true;
-                        long tokens = a * 3 + b; // Cost of tokens (3 for A, 1 for B)
-                        minTokens = Math.min(minTokens, tokens);
+                        BigDecimal tokens = BigDecimal.valueOf(a).multiply(BigDecimal.valueOf(3))
+                                .add(BigDecimal.valueOf(b)); // Cost of tokens (3 for A, 1 for B)
+                        minTokens = minTokens.min(tokens);
                     }
                 }
             }
 
             // Add the cost of winning this machine, if possible
             if (canWin) {
-                totalTokens += minTokens;
+                totalTokens = totalTokens.add(BigDecimal.valueOf(minTokens.longValue()));
             }
         }
 
         return totalTokens;
     }
 
-    private static long minTokensToWinTest(List<ClawMachine> machines) {
-        long totalTokens = 0L;
+    private static BigDecimal minTokensToWin2(List<ClawMachine> machines) {
+        BigDecimal totalTokens = BigDecimal.ZERO;
 
         for (ClawMachine machine : machines) {
             // Solve the system of equations for a and b
-            long determinant = machine.ax * machine.by - machine.ay * machine.bx;
+            BigDecimal determinant = machine.ax.multiply(machine.by).subtract(machine.ay.multiply(machine.bx));
 
-            if (determinant != 0) {
-                long a = (machine.px * machine.by - machine.py * machine.bx) / determinant;
-                long b = (machine.ax * machine.py - machine.ay * machine.px) / determinant;
+            if (determinant.compareTo(BigDecimal.ZERO) != 0) {
+                BigDecimal a = machine.px.multiply(machine.by).subtract(machine.py.multiply(machine.bx))
+                        .divide(determinant, java.math.RoundingMode.HALF_UP);
+                BigDecimal b = machine.ax.multiply(machine.py).subtract(machine.ay.multiply(machine.px))
+                        .divide(determinant, java.math.RoundingMode.HALF_UP);
 
-                // Check if a and b are non-negative integers
-                if (a >= 0 && b >= 0 && a == Math.floor(a) && b == Math.floor(b) && a <= 100 && b <= 100) {
-                    totalTokens += (int) a * 3 + (int) b; // Cost of tokens (3 for A, 1 for B)
+                BigDecimal x = machine.ax.multiply(a)
+                        .add(machine.bx.multiply(b));
+                BigDecimal y = machine.ay.multiply(a)
+                        .add(machine.by.multiply(b));
+
+                if (Objects.equals(x, machine.px) && Objects.equals(y, machine.py)
+                        && a.compareTo(BigDecimal.valueOf(100)) <= 0 && b.compareTo(BigDecimal.valueOf(100)) <= 0) {
+                    totalTokens = totalTokens.add(a.multiply(BigDecimal.valueOf(3)).add(b)); // Cost of tokens (3 for A,
+                                                                                             // 1 for B)
+                }
+            }
+        }
+        return totalTokens;
+    }
+
+    private static BigDecimal minTokensToWinPart2(List<ClawMachine> machines) {
+        BigDecimal totalTokens = BigDecimal.ZERO;
+
+        for (ClawMachine machine : machines) {
+            // Solve the system of equations for a and b
+            BigDecimal determinant = machine.ax.multiply(machine.by).subtract(machine.ay.multiply(machine.bx));
+
+            if (determinant.compareTo(BigDecimal.ZERO) != 0) {
+                BigDecimal a = machine.px.multiply(machine.by).subtract(machine.py.multiply(machine.bx))
+                        .divide(determinant, java.math.RoundingMode.HALF_UP);
+                BigDecimal b = machine.ax.multiply(machine.py).subtract(machine.ay.multiply(machine.px))
+                        .divide(determinant, java.math.RoundingMode.HALF_UP);
+
+                BigDecimal x = machine.ax.multiply(a)
+                        .add(machine.bx.multiply(b));
+                BigDecimal y = machine.ay.multiply(a)
+                        .add(machine.by.multiply(b));
+
+                if (Objects.equals(x, machine.px) && Objects.equals(y, machine.py)) {
+                    totalTokens = totalTokens.add(a.multiply(BigDecimal.valueOf(3)).add(b)); // Cost of tokens (3 for A, 1 for B)
                 }
             }
         }
