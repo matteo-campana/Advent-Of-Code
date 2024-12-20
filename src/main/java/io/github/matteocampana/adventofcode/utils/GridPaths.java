@@ -20,7 +20,6 @@ public class GridPaths {
         printGrid(grid, null);
 
         List<List<State>> paths = new ArrayList<>();
-        List<Long> costs = new ArrayList<>();
         boolean[][] visited = new boolean[grid.length][grid[0].length];
 
         State start = findPosition(grid, 'S');
@@ -33,29 +32,38 @@ public class GridPaths {
 
         // DFS to find all paths
         List<State> currentPath = new ArrayList<>();
-        dfs(grid, start, end, visited, currentPath, paths, costs, 0, -1);
+        dfs(grid, start, end, visited, currentPath, paths, 0, -1);
 
         // Output DFS results
         System.out.println("\nPaths and their costs:");
-        for (int i = 0; i < paths.size(); i++) {
-            System.out.println("Path " + (i + 1) + ": " + pathToString(paths.get(i)) + ", Cost: " + costs.get(i));
-            System.out.println("Grid with Path " + (i + 1) + ":");
-            printGrid(grid, paths.get(i));
+        for (List<State> path : paths) {
+            System.out.println("Path: " + pathToString(path) + ", Cost: " + path.get(path.size() - 1).cost);
+            System.out.println("Grid with Path:");
+            printGrid(grid, path);
         }
 
         // BFS to find the minimum-cost path
         List<State> minPath = bfs(grid, start, end);
-        System.out.println("\nMinimum Path (BFS): " + pathToString(minPath) + ", Cost: " + calculatePathCost(minPath));
+        System.out.println(
+                "\nMinimum Path (BFS): " + pathToString(minPath) + ", Cost: " + minPath.get(minPath.size() - 1).cost);
         System.out.println("Grid with Minimum Path:");
         printGrid(grid, minPath);
     }
 
     private static class State {
         int x, y;
+        long cost;
+        int direction;
 
         public State(int x, int y) {
+            this(x, y, 0, -1);
+        }
+
+        public State(int x, int y, long cost, int direction) {
             this.x = x;
             this.y = y;
+            this.cost = cost;
+            this.direction = direction;
         }
 
         @Override
@@ -66,18 +74,17 @@ public class GridPaths {
 
     private static void dfs(char[][] grid, State start, State end,
             boolean[][] visited, List<State> currentPath,
-            List<List<State>> paths, List<Long> costs, long currentCost, int prevDirection) {
+            List<List<State>> paths, long currentCost, int prevDirection) {
         if (start.x == end.x && start.y == end.y) {
             // Found a path
-            currentPath.add(new State(start.x, start.y));
+            currentPath.add(new State(start.x, start.y, currentCost, prevDirection));
             paths.add(new ArrayList<>(currentPath));
-            costs.add(currentCost);
             currentPath.remove(currentPath.size() - 1);
             return;
         }
 
         visited[start.x][start.y] = true;
-        currentPath.add(new State(start.x, start.y));
+        currentPath.add(new State(start.x, start.y, currentCost, prevDirection));
 
         for (int i = 0; i < 4; i++) {
             int newX = start.x + DX[i];
@@ -89,7 +96,7 @@ public class GridPaths {
             }
 
             if (isValid(grid, newX, newY, visited)) {
-                dfs(grid, new State(newX, newY), end, visited, currentPath, paths, costs, newCost, i);
+                dfs(grid, new State(newX, newY, newCost, i), end, visited, currentPath, paths, newCost, i);
             }
         }
 
@@ -98,24 +105,21 @@ public class GridPaths {
     }
 
     private static List<State> bfs(char[][] grid, State start, State end) {
-        Queue<List<State>> queue = new LinkedList<>();
+        Queue<List<State>> queue = new PriorityQueue<>(
+                Comparator.comparingLong(path -> path.get(path.size() - 1).cost));
         boolean[][] visited = new boolean[grid.length][grid[0].length];
-        Map<State, Long> costMap = new HashMap<>();
-        Map<State, Integer> directionMap = new HashMap<>();
 
         // Initialize BFS with the starting point
         List<State> startPath = new ArrayList<>();
         startPath.add(start);
         queue.add(startPath);
         visited[start.x][start.y] = true;
-        costMap.put(start, 0L);
-        directionMap.put(start, -1);
 
         while (!queue.isEmpty()) {
             List<State> currentPath = queue.poll();
             State currentPoint = currentPath.get(currentPath.size() - 1);
-            long currentCost = costMap.get(currentPoint);
-            int prevDirection = directionMap.get(currentPoint);
+            long currentCost = currentPoint.cost;
+            int prevDirection = currentPoint.direction;
 
             // Check if we reached the end point
             if (currentPoint.x == end.x && currentPoint.y == end.y) {
@@ -132,14 +136,12 @@ public class GridPaths {
                     newCost += TURN_COST;
                 }
 
-                State newState = new State(newX, newY);
+                State newState = new State(newX, newY, newCost, i);
                 if (isValid(grid, newX, newY, visited)) {
                     visited[newX][newY] = true;
                     List<State> newPath = new ArrayList<>(currentPath);
                     newPath.add(newState);
                     queue.add(newPath);
-                    costMap.put(newState, newCost);
-                    directionMap.put(newState, i);
                 }
             }
         }
@@ -193,25 +195,5 @@ public class GridPaths {
             }
             System.out.println();
         }
-    }
-
-    private static long calculatePathCost(List<State> path) {
-        long cost = 0;
-        int prevDirection = -1;
-        for (int i = 1; i < path.size(); i++) {
-            State prev = path.get(i - 1);
-            State curr = path.get(i);
-            for (int j = 0; j < 4; j++) {
-                if (prev.x + DX[j] == curr.x && prev.y + DY[j] == curr.y) {
-                    cost += COST[j];
-                    if (prevDirection != -1 && prevDirection != j) {
-                        cost += TURN_COST;
-                    }
-                    prevDirection = j;
-                    break;
-                }
-            }
-        }
-        return cost;
     }
 }
