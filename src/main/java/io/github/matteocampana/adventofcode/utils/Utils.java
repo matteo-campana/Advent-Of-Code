@@ -21,6 +21,23 @@ import io.github.cdimascio.dotenv.Dotenv;
 @SuppressWarnings("CallToPrintStackTrace")
 public class Utils {
 
+    private static void downloadPuzzleInput(int day, String sessionCookie, Path dayPath)
+            throws IOException, URISyntaxException {
+        URL url = new URI("https://adventofcode.com/2024/day/" + day + "/input").toURL();
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Cookie", "session=" + sessionCookie);
+
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                FileWriter fileWriter = new FileWriter(dayPath.resolve("input.txt").toFile())) {
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                fileWriter.write(inputLine + "\n");
+            }
+            System.out.println("Input for day " + day + " saved to file");
+        }
+    }
+
     public static void getPuzzleInput(Date inputDate, String sessionCookie) {
         Path resourcesPath = Paths.get("src/main/resources/input");
         SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy");
@@ -36,20 +53,7 @@ public class Utils {
             if (!Files.exists(dayPath)) {
                 Files.createDirectories(dayPath);
             }
-
-            URL url = new URI("https://adventofcode.com/2024/day/" + day + "/input").toURL();
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("Cookie", "session=" + sessionCookie);
-
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                    FileWriter fileWriter = new FileWriter(dayPath.resolve("input.txt").toFile())) {
-                String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    fileWriter.write(inputLine + "\n");
-                }
-                System.out.println("Input for day " + inputDateString + " saved to file");
-            }
+            downloadPuzzleInput(day, sessionCookie, dayPath);
         } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
         }
@@ -65,24 +69,10 @@ public class Utils {
             }
 
             Path dayPath = inputPath.resolve("day" + day);
-
             if (!Files.exists(dayPath)) {
                 Files.createDirectories(dayPath);
             }
-
-            URL url = new URI("https://adventofcode.com/2024/day/" + day + "/input").toURL();
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("Cookie", "session=" + sessionCookie);
-
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                    FileWriter fileWriter = new FileWriter(dayPath.resolve("input.txt").toFile())) {
-                String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    fileWriter.write(inputLine + "\n");
-                }
-                System.out.println("Input for day " + day + " saved to file");
-            }
+            downloadPuzzleInput(day, sessionCookie, dayPath);
         } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
         }
