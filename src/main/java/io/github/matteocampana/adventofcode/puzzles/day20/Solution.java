@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class Solution {
 
     public static void main(String[] args) {
-        Path inputFilePath = Paths.get("input/day20/input.txt");
+        Path inputFilePath = Paths.get("input/day20/test.txt");
         List<String> input = new ArrayList<>();
         try (InputStream inputStream = Solution.class.getClassLoader().getResourceAsStream(inputFilePath.toString())) {
             if (inputStream == null)
@@ -39,28 +39,29 @@ public class Solution {
         System.out.println("[PART 1] Minimum path cost: " + noCheatCost);
 
         System.out.println("[PART 2] Number of cheats: " + countSavedPicoseconds(racetrackMap, noCheatCost));
+
     }
 
     private static class Cheat implements Comparable<Cheat> {
         int y, x;
-        long savedPicosenconds;
+        long savedPicoseconds;
 
-        public Cheat(int y, int x, long savedPicosenconds) {
+        public Cheat(int y, int x, long savedPicoseconds) {
             this.y = y;
             this.x = x;
-            this.savedPicosenconds = savedPicosenconds;
+            this.savedPicoseconds = savedPicoseconds;
         }
 
         @Override
         public int compareTo(@NotNull Cheat o) {
-            if (this.savedPicosenconds == o.savedPicosenconds)
+            if (this.savedPicoseconds == o.savedPicoseconds)
                 return 0;
-            return this.savedPicosenconds > o.savedPicosenconds ? 1 : -1;
+            return this.savedPicoseconds > o.savedPicoseconds ? 1 : -1;
         }
 
         @Override
         public String toString() {
-            return "Cheat{" + "y=" + y + ", x=" + x + ", savedPicosenconds=" + savedPicosenconds + '}';
+            return "Cheat{" + "y=" + y + ", x=" + x + ", savedPicoseconds=" + savedPicoseconds + '}';
         }
 
         @Override
@@ -77,13 +78,12 @@ public class Solution {
     private static class State implements Comparable<State> {
         int y, x;
         long cost;
-        State parent;
+        int direction = -1;
 
-        public State(int y, int x, long cost, State parent) {
-            this.x = x;
+        public State(int y, int x, long cost) {
             this.y = y;
+            this.x = x;
             this.cost = cost;
-            this.parent = parent;
         }
 
         @Override
@@ -91,6 +91,21 @@ public class Solution {
             if (this.cost == o.cost)
                 return 0;
             return this.cost > o.cost ? 1 : -1;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+            State state = (State) o;
+            return y == state.y && x == state.x && direction == state.direction;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(y, x, direction);
         }
     }
 
@@ -125,20 +140,17 @@ public class Solution {
         if (possibleCheats.isEmpty())
             return 0L;
 
-        // There is one cheat that saves 40 picoseconds.
-        // There is one cheat that saves 64 picoseconds.
-
         // group by the same saved picoseconds and print the number of cheats and the
         // picoseconds saved
         possibleCheats.stream()
-                .collect(Collectors.groupingBy(cheat -> cheat.savedPicosenconds, Collectors.counting()))
+                .collect(Collectors.groupingBy(cheat -> cheat.savedPicoseconds, Collectors.counting()))
                 .entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .forEach(entry -> System.out.println(
                         "\t- There is " + entry.getValue() + " cheat that saves " + entry.getKey() + " picoseconds."));
 
         possibleCheats.sort(Collections.reverseOrder());
-        List<Cheat> validCheats = possibleCheats.stream().filter(cheat -> cheat.savedPicosenconds >= 100).toList();
+        List<Cheat> validCheats = possibleCheats.stream().filter(cheat -> cheat.savedPicoseconds >= 100).toList();
         return validCheats.size();
     }
 
@@ -162,7 +174,7 @@ public class Solution {
         int[] endPosition = find(racetrackMap, 'E');
 
         Queue<State> openSet = new PriorityQueue<>();
-        openSet.add(new State(startPosition[0], startPosition[1], 1, null));
+        openSet.add(new State(startPosition[0], startPosition[1], 1));
 
         while (!openSet.isEmpty()) {
             State currentState = openSet.poll();
@@ -178,7 +190,7 @@ public class Solution {
                     long cost = currentState.cost + 1;
                     if (cost < gCost.getOrDefault(newY + "," + newX, Long.MAX_VALUE)) {
                         gCost.put(newY + "," + newX, cost);
-                        State newState = new State(newY, newX, cost, currentState);
+                        State newState = new State(newY, newX, cost);
                         openSet.add(newState);
                     }
                 }
@@ -190,4 +202,5 @@ public class Solution {
     private static boolean isInBound(char[][] racetrackMap, int row, int col) {
         return row > 0 && racetrackMap.length > row && col > 0 && racetrackMap[row].length > col;
     }
+
 }
