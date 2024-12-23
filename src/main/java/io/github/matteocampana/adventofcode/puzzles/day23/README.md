@@ -6,8 +6,8 @@
 |-----------------|------------------|
 | $O(V^{3})$         | $O(V)$           |
 
-- **Time complexity**: Finding all triplets in a graph requires checking each combination of three vertices, leading to O(V^3) complexity.
-- **Space complexity**: Storing the graph and triplets requires O(V) space.
+- **Time complexity**: Finding all triplets in a graph requires checking each combination of three vertices, leading to $O(V^{3})$ complexity.
+- **Space complexity**: Storing the graph and triplets requires $O(V)$ space.
 
 ## Part 2
 1. Parse the input to build the graph.
@@ -17,5 +17,5 @@
 |-----------------|------------------|
 | $O(3^{(V/3)})$      | $O(V)$             |
 
-- **Time complexity**: The Bron-Kerbosch algorithm has a worst-case time complexity of O(3^(V/3)) for finding maximal cliques.
-- **Space complexity**: Storing the graph and intermediate sets requires O(V) space.
+- **Time complexity**: The Bron-Kerbosch algorithm has a worst-case time complexity of $O(3^{(V/3)})$ for finding maximal cliques.
+- **Space complexity**: Storing the graph and intermediate sets requires $O(V)$ space.
