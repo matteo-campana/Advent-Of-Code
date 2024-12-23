@@ -183,8 +183,16 @@ public class GridPaths {
             for (State point : path) {
                 int x = point.x;
                 int y = point.y;
-                if (tempGrid[x][y] == '.') { // Don't overwrite start (S) or end (E)
-                    tempGrid[x][y] = '*';
+                int direction = point.direction;
+
+                if (tempGrid[y][x] == '.') { // Don't overwrite start (S) or end (E)
+                    tempGrid[y][x] = switch (direction) {
+                        case 0 -> 'v'; // Down
+                        case 1 -> '<'; // Left
+                        case 2 -> '^'; // Up
+                        case 3 -> '>'; // Right
+                        default -> '*'; // Path
+                    };
                 }
             }
         }
